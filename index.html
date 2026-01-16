@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TTC Live Terminal • 509 & 510</title>
+    <title>DTM • DENMAR Transit Map</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Leaflet CSS -->
@@ -26,14 +26,14 @@
         .direction-badge {
             background: white;
             color: #1e293b;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 900;
-            padding: 2px 5px;
-            border-radius: 6px;
-            border: 2px solid #cbd5e1;
-            margin-bottom: -6px;
+            padding: 1px 4px;
+            border-radius: 4px;
+            border: 1.5px solid #cbd5e1;
+            margin-bottom: -4px;
             z-index: 20;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             letter-spacing: -0.025em;
         }
 
@@ -41,12 +41,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 34px;
-            height: 34px;
+            width: 32px;
+            height: 32px;
             border: 2.5px solid white;
             border-radius: 50%;
             box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.8s linear, top 0.8s linear, left 0.8s linear;
         }
         
         /* 509 Blue */
@@ -57,29 +57,29 @@
         
         /* 510B Muted Branch */
         .route-510b-muted { 
-            background-color: #94a3b8; 
-            opacity: 0.7;
+            background-color: #64748b; 
+            opacity: 0.9;
             box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
         
         .stop-marker {
             background: #1e293b;
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
-            border: 3px solid white;
-            box-shadow: 0 0 12px rgba(0,0,0,0.4);
+            border: 2.5px solid white;
+            box-shadow: 0 0 8px rgba(0,0,0,0.3);
         }
 
         .route-label-card {
-            background: rgba(255, 255, 255, 0.98);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.08);
         }
 
         @keyframes pulse-soft {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+            50% { opacity: 0.6; }
         }
         .loading-pulse { animation: pulse-soft 2s infinite; }
     </style>
@@ -87,33 +87,37 @@
 <body class="bg-slate-50 font-sans text-slate-900 overflow-hidden h-screen flex flex-col">
 
     <!-- Header -->
-    <header class="bg-white border-b px-6 py-4 flex items-center justify-between shadow-sm z-20">
+    <header class="bg-white border-b px-6 py-3 flex items-center justify-between shadow-sm z-20">
         <div class="flex items-center gap-3">
-            <div class="p-2 bg-red-600 rounded-lg shadow-inner">
-                <i data-lucide="tram" class="text-white h-6 w-6"></i>
+            <div class="flex-shrink-0">
+                <img src="https://images.squarespace-cdn.com/content/v2/namespaces/memberAccountAvatars/libraries/5554fc6be4b010ac6e753e8b/0620c9d8550a4f6b9d79ed1a12fb2f60/0620c9d8550a4f6b9d79ed1a12fb2f60.jpeg?format=300w" 
+                     alt="DENMAR Logo" 
+                     class="h-10 w-10 rounded-full border-2 border-slate-100 shadow-sm object-cover">
             </div>
             <div>
-                <h1 class="text-xl font-bold tracking-tight italic">TTC Live Terminal</h1>
-                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] leading-none mt-1">Streetcar Fleet Tracking</p>
+                <h1 class="text-lg font-black tracking-tight uppercase leading-none">
+                    DENMAR Transit Map (DTM)
+                </h1>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">For DENMAR personal use, but you can use it too!</p>
             </div>
         </div>
 
         <div class="hidden lg:flex items-center gap-4">
             <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
-                <button id="toggle-509" onclick="toggleRoute('509')" class="px-5 py-2 rounded-lg text-sm font-black transition-all bg-blue-600 text-white shadow-md">
+                <button id="toggle-509" onclick="toggleRoute('509')" class="px-5 py-1.5 rounded-lg text-xs font-black transition-all bg-blue-600 text-white shadow-md">
                     509
                 </button>
-                <button id="toggle-510" onclick="toggleRoute('510')" class="px-5 py-2 rounded-lg text-sm font-black transition-all bg-red-600 text-white shadow-md ml-1">
+                <button id="toggle-510" onclick="toggleRoute('510')" class="px-5 py-1.5 rounded-lg text-xs font-black transition-all bg-red-600 text-white shadow-md ml-1">
                     510
                 </button>
             </div>
             <div class="text-right border-l pl-4 min-w-[140px]">
-                <p id="last-updated-text" class="text-xs font-mono font-bold text-slate-400 tracking-tighter uppercase">Initializing GPS...</p>
+                <p id="last-updated-text" class="text-[10px] font-mono font-bold text-slate-400 tracking-tighter uppercase">Initializing...</p>
             </div>
         </div>
         
-        <button onclick="updateData()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-full transition-all active:scale-95 group">
-            <i data-lucide="rotate-cw" id="refresh-icon" class="h-5 w-5 text-slate-600"></i>
+        <button onclick="forceUpdate()" id="refresh-btn" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-full transition-all active:scale-90 group">
+            <i data-lucide="refresh-cw" id="refresh-icon" class="h-4 w-4 text-slate-600"></i>
         </button>
     </header>
 
@@ -121,112 +125,109 @@
     <main class="flex-1 relative">
         <div id="map"></div>
 
-        <!-- Route Indicator Overlay (Top Left) -->
-        <div class="absolute top-6 left-6 z-[1000] space-y-3 pointer-events-none lg:pointer-events-auto">
-            <div id="card-509" class="route-label-card p-3.5 rounded-2xl shadow-xl border-l-[6px] border-blue-600 flex items-center gap-3 w-60">
-                <div class="bg-blue-600 text-white font-black px-2.5 py-1 rounded-lg text-xs shadow-sm">509</div>
+        <!-- Route Indicator Overlay -->
+        <div class="absolute top-4 left-4 z-[1000] space-y-2 pointer-events-none lg:pointer-events-auto">
+            <div id="card-509" class="route-label-card p-3 rounded-xl shadow-lg border-l-4 border-blue-600 flex items-center gap-3 w-56">
+                <div class="bg-blue-600 text-white font-black px-2 py-0.5 rounded text-[10px]">509</div>
                 <div>
-                    <p class="text-[10px] font-black text-slate-400 uppercase leading-none mb-1">Harbourfront Line</p>
-                    <p class="text-xs font-bold text-slate-800">Union ↔ Exhibition</p>
+                    <p class="text-[9px] font-black text-slate-400 uppercase leading-none mb-0.5">Harbourfront</p>
+                    <p class="text-[11px] font-bold text-slate-800">Union ↔ Exhibition</p>
                 </div>
             </div>
-            <div id="card-510" class="route-label-card p-3.5 rounded-2xl shadow-xl border-l-[6px] border-red-600 flex flex-col gap-2.5 w-60">
+            <div id="card-510" class="route-label-card p-3 rounded-xl shadow-lg border-l-4 border-red-600 flex flex-col gap-2 w-56">
                 <div class="flex items-center gap-3">
-                    <div class="bg-red-600 text-white font-black px-2.5 py-1 rounded-lg text-xs shadow-sm">510A</div>
+                    <div class="bg-red-600 text-white font-black px-2 py-0.5 rounded text-[10px]">510A</div>
                     <div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase leading-none mb-1">Primary Branch</p>
-                        <p class="text-xs font-bold text-slate-800">Direct to Union</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3 border-t border-slate-100 pt-2.5 opacity-50">
-                    <div class="bg-slate-400 text-white font-black px-2.5 py-1 rounded-lg text-xs shadow-sm">510B</div>
-                    <div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase leading-none mb-1">Short Turn</p>
-                        <p class="text-[11px] font-bold text-slate-600 italic">Turns at Spadina/QQ</p>
+                        <p class="text-[9px] font-black text-slate-400 uppercase leading-none mb-0.5">Spadina Main</p>
+                        <p class="text-[11px] font-bold text-slate-800">Direct to Union</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Initial Loader -->
-        <div id="initial-loader" class="absolute inset-0 z-[2000] bg-white flex flex-col items-center justify-center transition-opacity duration-700">
-            <div class="flex flex-col items-center gap-5">
+        <div id="initial-loader" class="absolute inset-0 z-[2000] bg-white flex flex-col items-center justify-center transition-opacity duration-500">
+            <div class="flex flex-col items-center gap-4">
                 <div class="relative">
-                    <div class="h-20 w-20 border-4 border-slate-100 border-t-red-600 rounded-full animate-spin"></div>
-                    <i data-lucide="tram" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-300 h-8 w-8"></i>
+                    <div class="h-16 w-16 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin"></div>
+                    <i data-lucide="radio" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-300 h-6 w-6"></i>
                 </div>
                 <div class="text-center">
-                    <p class="font-black text-slate-800 tracking-widest uppercase text-sm">Synchronizing Feed</p>
-                    <p class="text-xs text-slate-400 font-bold mt-1 loading-pulse italic">Mapping TTC GPS Snapshots...</p>
+                    <p class="font-black text-slate-800 tracking-widest uppercase text-[10px]">Pinging TTC API</p>
+                    <p class="text-[10px] text-slate-400 font-bold mt-1 loading-pulse italic uppercase">Acquiring Fleet GPS...</p>
                 </div>
             </div>
         </div>
 
-        <!-- Floating Bottom Panel -->
-        <div class="absolute bottom-8 right-8 w-72 bg-white/95 backdrop-blur shadow-2xl rounded-3xl p-5 border border-white z-[1000] hidden md:block">
-            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+        <!-- Fleet Stats Panel -->
+        <div class="absolute bottom-6 right-6 w-64 bg-white/95 backdrop-blur shadow-2xl rounded-2xl p-4 border border-white z-[1000] hidden md:block">
+            <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
                 <div class="flex items-center gap-2">
-                    <div class="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span class="text-[11px] font-black uppercase text-slate-400 tracking-widest">Fleet Live Status</span>
+                    <div class="h-1.5 w-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                    <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Active Fleet</span>
                 </div>
-                <span id="total-count" class="text-[10px] font-black bg-slate-100 px-2.5 py-1 rounded-full text-slate-600 tracking-tighter">0 ACTIVE</span>
+                <span id="total-count" class="text-[9px] font-black bg-slate-100 px-2 py-0.5 rounded-full text-slate-600">0 UNITS</span>
             </div>
-            <div class="space-y-3">
+            <div class="space-y-2.5">
                 <div class="flex items-center justify-between">
-                    <span class="text-sm font-bold text-slate-700">509 Harbourfront</span>
-                    <span id="count-509" class="text-xs font-mono font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">0</span>
+                    <span class="text-xs font-bold text-slate-700">509 Harbourfront</span>
+                    <span id="count-509" class="text-[10px] font-mono font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded">0</span>
                 </div>
                 <div class="flex items-center justify-between">
-                    <span class="text-sm font-bold text-slate-700">510A to Union</span>
-                    <span id="count-510a" class="text-xs font-mono font-black text-red-600 bg-red-50 px-2 py-0.5 rounded-md">0</span>
-                </div>
-                <div class="flex items-center justify-between opacity-40">
-                    <span class="text-sm font-bold text-slate-500 italic">510B Short Turn</span>
-                    <span id="count-510b" class="text-xs font-mono font-black text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">0</span>
+                    <span class="text-xs font-bold text-slate-700">510A/B Spadina</span>
+                    <span id="count-510" class="text-[10px] font-mono font-black text-red-600 bg-red-50 px-2 py-0.5 rounded">0</span>
                 </div>
             </div>
         </div>
     </main>
 
     <!-- Mobile Navigation -->
-    <footer class="md:hidden bg-white border-t px-4 py-3 flex justify-around items-center z-20 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
-        <button onclick="toggleRoute('509')" id="mobile-toggle-509" class="flex-1 flex flex-col items-center py-1 text-blue-600">
-            <div id="bar-509" class="h-1 w-10 rounded-full mb-1.5 bg-blue-600"></div>
-            <span class="text-xs font-black uppercase tracking-tighter">509</span>
+    <footer class="md:hidden bg-white border-t px-4 py-2 flex justify-around items-center z-20 shadow-lg">
+        <button onclick="toggleRoute('509')" id="mobile-toggle-509" class="flex-1 flex flex-col items-center py-1">
+            <div id="bar-509" class="h-1 w-8 rounded-full mb-1 bg-blue-600"></div>
+            <span class="text-[10px] font-black uppercase tracking-tighter">509</span>
         </button>
-        <button onclick="toggleRoute('510')" id="mobile-toggle-510" class="flex-1 flex flex-col items-center py-1 text-red-600">
-            <div id="bar-510" class="h-1 w-10 rounded-full mb-1.5 bg-red-600"></div>
-            <span class="text-xs font-black uppercase tracking-tighter">510</span>
+        <button onclick="toggleRoute('510')" id="mobile-toggle-510" class="flex-1 flex flex-col items-center py-1">
+            <div id="bar-510" class="h-1 w-8 rounded-full mb-1 bg-red-600"></div>
+            <span class="text-[10px] font-black uppercase tracking-tighter">510</span>
         </button>
     </footer>
 
     <script>
         const API_BASE = 'https://retro.umoiq.com/service/publicXMLFeed';
-        const UPDATE_INTERVAL = 15000;
+        const UPDATE_INTERVAL = 5000; // 5 seconds polling
         
         let map;
         let vehicleMarkers = {}; 
         let activeRoutes = ['509', '510'];
         let isUpdating = false;
 
-        // User Defined Coordinates
         const KEY_STOPS = [
-            { name: "Union Station", lat: 43.64564544708578, lon: -79.3791748051156, desc: "Main Connection" },
-            { name: "Harbourfront Centre", lat: 43.63960940571487, lon: -79.38196205913441, desc: "Stop ID: 15333" }
+            { name: "Union Station", lat: 43.645645, lon: -79.379174, desc: "Line 1 Connection" },
+            { name: "Harbourfront Centre", lat: 43.639609, lon: -79.381962, desc: "Queens Quay Terminal" },
+            { name: "Spadina & QQ", lat: 43.6373, lon: -79.3926, desc: "510 Turnback Point" }
         ];
 
         window.onload = function() {
             lucide.createIcons();
             initMap();
             updateData();
+            
+            // Core data loop
             setInterval(updateData, UPDATE_INTERVAL);
+            
+            // Secondary loop just to update the "Reported Xs ago" text in open popups
+            setInterval(updatePopupTimers, 1000);
         };
 
         function initMap() {
-            map = L.map('map', { zoomControl: false }).setView([43.642, -79.385], 15);
+            map = L.map('map', { 
+                zoomControl: false,
+                attributionControl: false 
+            }).setView([43.641, -79.388], 15);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap'
+                maxZoom: 19
             }).addTo(map);
 
             L.control.zoom({ position: 'topright' }).addTo(map);
@@ -235,28 +236,28 @@
                 const stopIcon = L.divIcon({
                     className: 'custom-div-icon',
                     html: `<div class="stop-marker" title="${stop.name}"></div>`,
-                    iconSize: [16, 16],
-                    iconAnchor: [8, 8]
+                    iconSize: [14, 14],
+                    iconAnchor: [7, 7]
                 });
                 L.marker([stop.lat, stop.lon], { icon: stopIcon }).addTo(map)
-                    .bindPopup(`<div class="p-1"><b class="text-sm font-black">${stop.name}</b><p class="text-[11px] text-slate-500 font-bold uppercase mt-1 tracking-tight">${stop.desc}</p></div>`);
+                    .bindPopup(`<div class="p-1"><b class="text-xs font-black uppercase">${stop.name}</b><p class="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-tight">${stop.desc}</p></div>`);
             });
         }
 
-        function getSnappedHeading(heading) {
-            if (heading >= 315 || heading < 45) return 0;    // NB
-            if (heading >= 45 && heading < 135) return 90;   // EB
-            if (heading >= 135 && heading < 225) return 180; // SB
-            if (heading >= 225 && heading < 315) return 270; // WB
-            return 0;
+        function getCardinal(heading) {
+            if (heading >= 337.5 || heading < 22.5) return 'NB';
+            if (heading >= 22.5 && heading < 67.5) return 'NE';
+            if (heading >= 67.5 && heading < 112.5) return 'EB';
+            if (heading >= 112.5 && heading < 157.5) return 'SE';
+            if (heading >= 157.5 && heading < 202.5) return 'SB';
+            if (heading >= 202.5 && heading < 247.5) return 'SW';
+            if (heading >= 247.5 && heading < 292.5) return 'WB';
+            if (heading >= 292.5 && heading < 337.5) return 'NW';
+            return '--';
         }
 
-        function getCardinal(heading) {
-            if (heading >= 315 || heading < 45) return 'NB';
-            if (heading >= 45 && heading < 135) return 'EB';
-            if (heading >= 135 && heading < 225) return 'SB';
-            if (heading >= 225 && heading < 315) return 'WB';
-            return '--';
+        function forceUpdate() {
+            updateData();
         }
 
         async function updateData() {
@@ -278,21 +279,19 @@
                 document.getElementById('last-updated-text').innerText = 'Synced @ ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
                 
                 const count509 = allVehicles.filter(v => v.route === '509').length;
-                const count510a = allVehicles.filter(v => v.route === '510' && !v.isMuted).length;
-                const count510b = allVehicles.filter(v => v.route === '510' && v.isMuted).length;
+                const count510 = allVehicles.filter(v => v.route === '510').length;
                 
                 document.getElementById('count-509').innerText = count509;
-                document.getElementById('count-510a').innerText = count510a;
-                document.getElementById('count-510b').innerText = count510b;
-                document.getElementById('total-count').innerText = allVehicles.length + ' ACTIVE';
+                document.getElementById('count-510').innerText = count510;
+                document.getElementById('total-count').innerText = allVehicles.length + ' UNITS';
                 
                 const loader = document.getElementById('initial-loader');
                 if (loader) {
                     loader.style.opacity = '0';
-                    setTimeout(() => loader.remove(), 700);
+                    setTimeout(() => loader.remove(), 500);
                 }
             } catch (error) {
-                console.error("Feed Error:", error);
+                console.error("Sync Error:", error);
             } finally {
                 isUpdating = false;
                 if (refreshIcon) refreshIcon.classList.remove('animate-spin');
@@ -320,7 +319,8 @@
                         heading: parseFloat(v.getAttribute('heading')),
                         speed: parseFloat(v.getAttribute('speedKmHr')),
                         secsSinceReport: parseInt(v.getAttribute('secsSinceReport')),
-                        isMuted: isMuted
+                        isMuted: isMuted,
+                        fetchedAt: Date.now()
                     };
                 });
             } catch (e) { return []; }
@@ -338,7 +338,6 @@
 
             vehicles.forEach(v => {
                 const cardinal = getCardinal(v.heading);
-                const snappedHeading = getSnappedHeading(v.heading);
                 let colorClass = '';
                 
                 if (v.route === '509') {
@@ -348,10 +347,10 @@
                 }
                 
                 const iconHtml = `
-                    <div class="marker-container">
+                    <div class="marker-container" id="marker-${v.id}">
                         <div class="direction-badge">${cardinal}</div>
-                        <div class="streetcar-marker ${colorClass}" style="transform: rotate(${snappedHeading}deg)">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                        <div class="streetcar-marker ${colorClass}" style="transform: rotate(${v.heading}deg)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z" />
                             </svg>
                         </div>
@@ -365,23 +364,39 @@
                     iconAnchor: [22, 24]
                 });
 
+                const popupContent = `
+                    <div class="p-1 min-w-[140px]">
+                        <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-100">
+                            <span class="text-[10px] font-black bg-slate-100 px-2 py-0.5 rounded uppercase tracking-tighter">${v.branch}</span>
+                            <span class="text-[10px] font-bold text-slate-400">CAR #${v.id}</span>
+                        </div>
+                        <p class="text-xs font-bold text-slate-800">${cardinal} Heading @ ${v.speed} km/h</p>
+                        <p class="text-[9px] text-slate-400 font-bold uppercase mt-1 tracking-tight">
+                            Reported <span class="live-report-timer" data-start="${v.secsSinceReport}" data-fetched="${v.fetchedAt}">${v.secsSinceReport}</span>s ago
+                        </p>
+                    </div>
+                `;
+
                 if (vehicleMarkers[v.id]) {
                     vehicleMarkers[v.id].setLatLng([v.lat, v.lon]);
                     vehicleMarkers[v.id].setIcon(icon);
+                    if (vehicleMarkers[v.id].getPopup()) {
+                        vehicleMarkers[v.id].getPopup().setContent(popupContent);
+                    }
                 } else {
                     const marker = L.marker([v.lat, v.lon], { icon }).addTo(map);
-                    marker.bindPopup(`
-                        <div class="p-1">
-                            <div class="flex items-center gap-2 mb-2 pb-1 border-b border-slate-100">
-                                <span class="text-xs font-black bg-slate-100 px-2 py-0.5 rounded uppercase">${v.branch}</span>
-                                <span class="text-xs font-bold text-slate-400">#${v.id}</span>
-                            </div>
-                            <p class="text-sm font-bold text-slate-800">${cardinal} Travel @ ${v.speed} km/h</p>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-tight">Reported ${v.secsSinceReport}s ago</p>
-                        </div>
-                    `);
+                    marker.bindPopup(popupContent);
                     vehicleMarkers[v.id] = marker;
                 }
+            });
+        }
+
+        function updatePopupTimers() {
+            document.querySelectorAll('.live-report-timer').forEach(span => {
+                const baseSecs = parseInt(span.getAttribute('data-start'));
+                const fetchedAt = parseInt(span.getAttribute('data-fetched'));
+                const elapsedSinceFetch = Math.floor((Date.now() - fetchedAt) / 1000);
+                span.innerText = baseSecs + elapsedSinceFetch;
             });
         }
 
@@ -404,19 +419,22 @@
             const is509 = activeRoutes.includes('509');
             const is510 = activeRoutes.includes('510');
             
-            document.getElementById('toggle-509').className = is509 
-                ? "px-5 py-2 rounded-lg text-sm font-black transition-all bg-blue-600 text-white shadow-md"
-                : "px-5 py-2 rounded-lg text-sm font-black transition-all text-slate-500 hover:text-slate-700 bg-slate-100";
-            
-            document.getElementById('toggle-510').className = is510 
-                ? "px-5 py-2 rounded-lg text-sm font-black transition-all bg-red-600 text-white shadow-md ml-1"
-                : "px-5 py-2 rounded-lg text-sm font-black transition-all text-slate-500 hover:text-slate-700 bg-slate-100 ml-1";
+            const btn509 = document.getElementById('toggle-509');
+            const btn510 = document.getElementById('toggle-510');
 
-            document.getElementById('bar-509').className = `h-1 w-10 rounded-full mb-1.5 ${is509 ? 'bg-blue-600' : 'bg-transparent'}`;
-            document.getElementById('bar-510').className = `h-1 w-10 rounded-full mb-1.5 ${is510 ? 'bg-red-600' : 'bg-transparent'}`;
+            btn509.className = is509 
+                ? "px-5 py-1.5 rounded-lg text-xs font-black transition-all bg-blue-600 text-white shadow-md"
+                : "px-5 py-1.5 rounded-lg text-xs font-black transition-all text-slate-400 bg-slate-100 hover:bg-slate-200";
             
-            document.getElementById('card-509').style.opacity = is509 ? "1" : "0.3";
-            document.getElementById('card-510').style.opacity = is510 ? "1" : "0.3";
+            btn510.className = is510 
+                ? "px-5 py-1.5 rounded-lg text-xs font-black transition-all bg-red-600 text-white shadow-md ml-1"
+                : "px-5 py-1.5 rounded-lg text-xs font-black transition-all text-slate-400 bg-slate-100 hover:bg-slate-200 ml-1";
+
+            document.getElementById('bar-509').className = `h-1 w-8 rounded-full mb-1 ${is509 ? 'bg-blue-600' : 'bg-slate-200'}`;
+            document.getElementById('bar-510').className = `h-1 w-8 rounded-full mb-1 ${is510 ? 'bg-red-600' : 'bg-slate-200'}`;
+            
+            document.getElementById('card-509').style.opacity = is509 ? "1" : "0.2";
+            document.getElementById('card-510').style.opacity = is510 ? "1" : "0.2";
         }
     </script>
 </body>
