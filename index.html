@@ -49,15 +49,16 @@
         .route-510b-fill { fill: #64748b; }
         .route-510b-stroke { stroke: #334155; }
         
+        /* Bold Black Stop Dot */
         .black-stop-dot {
             background-color: #000000;
-            width: 10px;
-            height: 10px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
             border: 2px solid #ffffff;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
         }
-
+        
         .route-label-card {
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(8px);
@@ -187,7 +188,7 @@
 
     <script>
         const API_BASE = 'https://retro.umoiq.com/service/publicXMLFeed';
-        const UPDATE_INTERVAL = 1000;
+        const UPDATE_INTERVAL = 1000; // Hyper-responsive 1 second polling
         
         let map;
         let vehicleMarkers = {}; 
@@ -212,14 +213,15 @@
 
             L.control.zoom({ position: 'topright' }).addTo(map);
 
-            // Add the requested specific streetcar stop marker
+            // Add the bold black dot for the requested specific stop
             const stopIcon = L.divIcon({
                 className: 'custom-div-icon',
-                html: `<div class="black-stop-dot" title="Specific Stop"></div>`,
-                iconSize: [10, 10],
-                iconAnchor: [5, 5]
+                html: `<div class="black-stop-dot" title="Key Stop"></div>`,
+                iconSize: [12, 12],
+                iconAnchor: [6, 6]
             });
-            L.marker([43.63957988257761, -79.38194050693195], { icon: stopIcon }).addTo(map);
+            L.marker([43.63957988257761, -79.38194050693195], { icon: stopIcon }).addTo(map)
+                .bindPopup(`<div class="p-1"><b class="text-xs font-black uppercase">Queens Quay Stop</b></div>`);
 
             // 1. Fetch official track geometry first
             await Promise.all(activeRoutes.map(route => fetchRouteConfig(route)));
@@ -240,7 +242,6 @@
                 
                 const paths = Array.from(xml.querySelectorAll('path'));
                 
-                // Using softer, solid colors to prevent "weird density layering" from overlaps
                 const color = routeTag === '509' ? '#3b82f6' : '#ef4444'; 
                 
                 const layers = [];
@@ -282,7 +283,7 @@
                         const poly = L.polyline(points, {
                             color: color,
                             weight: 4,          
-                            opacity: 0.65,      // Reduced opacity to make lines less bold
+                            opacity: 0.65,      // Reduced opacity so lines are softer
                             lineJoin: 'round',
                             lineCap: 'round',
                             smoothFactor: 1.0   
